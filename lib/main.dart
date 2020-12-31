@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:device_info/device_info.dart';
 
 String deviceID;
+AndroidDeviceInfo androidInfo;
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -11,6 +13,19 @@ void main() async {
   await FirebaseMessaging.instance.getToken().then((token) {
     deviceID = token;
   });
+  DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
+  androidInfo = await deviceInfo.androidInfo;
+
+  FirebaseFirestore.instance
+      .collection('Persons')
+      .add({
+        'ID': deviceID,
+        'Time': DateTime.now(),
+        'Device': androidInfo.model,
+      })
+      .then((value) => print("User Added"))
+      .catchError((error) => print("Failed to add user: $error"));
+
   runApp(MyApp());
 }
 
@@ -75,14 +90,6 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   Widget build(BuildContext context) {
-    FirebaseFirestore.instance
-        .collection('Persons')
-        .add({
-          'ID': deviceID,
-          'Time': DateTime.now(),
-        })
-        .then((value) => print("User Added"))
-        .catchError((error) => print("Failed to add user: $error"));
     // This method is rerun every time setState is called, for instance as done
     // by the _incrementCounter method above.
     //
